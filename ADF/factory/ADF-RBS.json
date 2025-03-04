@@ -1,0 +1,15 @@
+{
+	"name": "ADF-RBS",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned,UserAssigned",
+		"principalId": "b5d0eca1-fcf5-4936-90f8-db7552db4283",
+		"tenantId": "e2e4b35c-00a0-4d3e-93ad-edd520c454ab",
+		"userAssignedIdentities": {
+			"/subscriptions/8d767cee-17af-426e-9452-e1e43419589b/resourcegroups/ResourceGroupRBS/providers/Microsoft.ManagedIdentity/userAssignedIdentities/Bipin_ManagedIdentity": {
+				"clientId": "8871be8f-e40b-42b6-87d9-fc21478bb3d9",
+				"principalId": "39eb811a-9efd-4ac6-8eda-623a6be661fc"
+			}
+		}
+	}
+}
