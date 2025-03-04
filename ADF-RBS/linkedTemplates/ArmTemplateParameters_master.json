@@ -1,0 +1,66 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "ADF-RBS"
+		},
+		"Bipin_ADB_LS_accessToken": {
+			"value": ""
+		},
+		"Bipin_ADLS_v2_LS_accessToken": {
+			"value": ""
+		},
+		"MySqlServer_password": {
+			"value": ""
+		},
+		"RMySql_password": {
+			"value": ""
+		},
+		"AzureKeyVaultData_properties_typeProperties_baseUrl": {
+			"value": "https://KeyVaultRBS.vault.azure.net/"
+		},
+		"AzureKeyVaultDataBricks_properties_typeProperties_baseUrl": {
+			"value": "https://KeyVaultRBS.vault.azure.net/"
+		},
+		"Bipin_ADB_LS_properties_typeProperties_existingClusterId": {
+			"value": "0228-125954-b4tl2cgh"
+		},
+		"Bipin_ADLS_LS_properties_typeProperties_url": {
+			"value": "https://adlsgenrbs.dfs.core.windows.net/"
+		},
+		"Bipin_ADLS_v2_LS_properties_typeProperties_existingClusterId": {
+			"value": "0303-101730-tqp6sd7t"
+		},
+		"MySqlServer_properties_typeProperties_server": {
+			"value": "LAPTOP-4S918E2B"
+		},
+		"MySqlServer_properties_typeProperties_database": {
+			"value": "mydb"
+		},
+		"MySqlServer_properties_typeProperties_userName": {
+			"value": "LAPTOP-4S918E2B\\91800"
+		},
+		"RMySql_properties_typeProperties_server": {
+			"value": "localhost"
+		},
+		"RMySql_properties_typeProperties_database": {
+			"value": "customer_db"
+		},
+		"RMySql_properties_typeProperties_username": {
+			"value": "root"
+		},
+		"bipindb_LS_properties_typeProperties_server": {
+			"value": "rbs-server.database.windows.net"
+		},
+		"bipindb_LS_properties_typeProperties_database": {
+			"value": "bipindb"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

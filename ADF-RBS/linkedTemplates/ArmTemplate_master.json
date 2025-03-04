@@ -1,0 +1,181 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "ADF-RBS"
+		},
+		"Bipin_ADB_LS_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'Bipin_ADB_LS'"
+		},
+		"Bipin_ADLS_v2_LS_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'Bipin_ADLS_v2_LS'"
+		},
+		"MySqlServer_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'MySqlServer'"
+		},
+		"RMySql_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'RMySql'"
+		},
+		"AzureKeyVaultData_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://KeyVaultRBS.vault.azure.net/"
+		},
+		"AzureKeyVaultDataBricks_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://KeyVaultRBS.vault.azure.net/"
+		},
+		"Bipin_ADB_LS_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0228-125954-b4tl2cgh"
+		},
+		"Bipin_ADLS_LS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsgenrbs.dfs.core.windows.net/"
+		},
+		"Bipin_ADLS_v2_LS_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0303-101730-tqp6sd7t"
+		},
+		"MySqlServer_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "LAPTOP-4S918E2B"
+		},
+		"MySqlServer_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "mydb"
+		},
+		"MySqlServer_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "LAPTOP-4S918E2B\\91800"
+		},
+		"RMySql_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "localhost"
+		},
+		"RMySql_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "customer_db"
+		},
+		"RMySql_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "root"
+		},
+		"bipindb_LS_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "rbs-server.database.windows.net"
+		},
+		"bipindb_LS_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "bipindb"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "ADF-RBS_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"Bipin_ADB_LS_accessToken": {
+						"value": "[parameters('Bipin_ADB_LS_accessToken')]"
+					},
+					"Bipin_ADLS_v2_LS_accessToken": {
+						"value": "[parameters('Bipin_ADLS_v2_LS_accessToken')]"
+					},
+					"MySqlServer_password": {
+						"value": "[parameters('MySqlServer_password')]"
+					},
+					"RMySql_password": {
+						"value": "[parameters('RMySql_password')]"
+					},
+					"AzureKeyVaultData_properties_typeProperties_baseUrl": {
+						"value": "[parameters('AzureKeyVaultData_properties_typeProperties_baseUrl')]"
+					},
+					"AzureKeyVaultDataBricks_properties_typeProperties_baseUrl": {
+						"value": "[parameters('AzureKeyVaultDataBricks_properties_typeProperties_baseUrl')]"
+					},
+					"Bipin_ADB_LS_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('Bipin_ADB_LS_properties_typeProperties_existingClusterId')]"
+					},
+					"Bipin_ADLS_v2_LS_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('Bipin_ADLS_v2_LS_properties_typeProperties_existingClusterId')]"
+					},
+					"Bipin_ADLS_LS_properties_typeProperties_url": {
+						"value": "[parameters('Bipin_ADLS_LS_properties_typeProperties_url')]"
+					},
+					"MySqlServer_properties_typeProperties_server": {
+						"value": "[parameters('MySqlServer_properties_typeProperties_server')]"
+					},
+					"MySqlServer_properties_typeProperties_database": {
+						"value": "[parameters('MySqlServer_properties_typeProperties_database')]"
+					},
+					"MySqlServer_properties_typeProperties_userName": {
+						"value": "[parameters('MySqlServer_properties_typeProperties_userName')]"
+					},
+					"RMySql_properties_typeProperties_server": {
+						"value": "[parameters('RMySql_properties_typeProperties_server')]"
+					},
+					"RMySql_properties_typeProperties_database": {
+						"value": "[parameters('RMySql_properties_typeProperties_database')]"
+					},
+					"RMySql_properties_typeProperties_username": {
+						"value": "[parameters('RMySql_properties_typeProperties_username')]"
+					},
+					"bipindb_LS_properties_typeProperties_server": {
+						"value": "[parameters('bipindb_LS_properties_typeProperties_server')]"
+					},
+					"bipindb_LS_properties_typeProperties_database": {
+						"value": "[parameters('bipindb_LS_properties_typeProperties_database')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "ADF-RBS_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ADF-RBS_ArmTemplate_0')]"
+			]
+		}
+	]
+}

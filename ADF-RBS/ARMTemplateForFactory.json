@@ -1,0 +1,1272 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "ADF-RBS"
+		},
+		"Bipin_ADB_LS_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'Bipin_ADB_LS'"
+		},
+		"Bipin_ADLS_v2_LS_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'Bipin_ADLS_v2_LS'"
+		},
+		"MySqlServer_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'MySqlServer'"
+		},
+		"RMySql_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'RMySql'"
+		},
+		"AzureKeyVaultData_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://KeyVaultRBS.vault.azure.net/"
+		},
+		"AzureKeyVaultDataBricks_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://KeyVaultRBS.vault.azure.net/"
+		},
+		"Bipin_ADB_LS_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0228-125954-b4tl2cgh"
+		},
+		"Bipin_ADLS_LS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsgenrbs.dfs.core.windows.net/"
+		},
+		"Bipin_ADLS_v2_LS_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0303-101730-tqp6sd7t"
+		},
+		"MySqlServer_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "LAPTOP-4S918E2B"
+		},
+		"MySqlServer_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "mydb"
+		},
+		"MySqlServer_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "LAPTOP-4S918E2B\\91800"
+		},
+		"RMySql_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "localhost"
+		},
+		"RMySql_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "customer_db"
+		},
+		"RMySql_properties_typeProperties_username": {
+			"type": "string",
+			"defaultValue": "root"
+		},
+		"bipindb_LS_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "rbs-server.database.windows.net"
+		},
+		"bipindb_LS_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "bipindb"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/SetVariable')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Set value for file type",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "FileType",
+							"value": {
+								"value": "@replace(pipeline().parameters.FileName,'Sales','')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string",
+						"defaultValue": "dailySales"
+					}
+				},
+				"variables": {
+					"FileType": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Rohit"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-03-03T10:48:39Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ingest-EmployeeDim-ToBronze')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ingest-EmployeeDim",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/derek80091@outlook.com/Bipin/Bronze-Setup & Implementation/ingest-Employee_dim"
+						},
+						"linkedServiceName": {
+							"referenceName": "Bipin_ADLS_v2_LS",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Bipin"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-03-04T17:29:10Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_v2_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ingest-EmployeeDim-ToLanding')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "getMaxFileDate",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "HighWatermark",
+								"type": "DatasetReference",
+								"parameters": {
+									"path": "SwapRecords/EmployeeDim"
+								}
+							}
+						}
+					},
+					{
+						"name": "getMaxTableDate",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "getMaxFileDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select format(max(lst_updt_ts),'yyyy-MM-dd HH:mm:ss.fff') as lst_updt_ts from dbo.employee_dim;",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"isolationLevel": "ReadCommitted",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "SQL_DS_bipindb",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "copy-EmployeeDim-Data",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "getMaxTableDate",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select * from dbo.employee_dim where lst_updt_ts>'@{formatDateTime(activity('getMaxFileDate').output.firstRow.lst_updt_ts,'yyyy-MM-dd HH:mm:ss.fff')}' and lst_updt_ts<='@{formatDateTime(activity('getMaxTableDate').output.firstRow.lst_updt_ts,'yyyy-MM-dd HH:mm:ss.fff')}';",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings",
+									"copyBehavior": "PreserveHierarchy"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "SQL_DS_bipindb",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "out_adls_parquet",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "update-HighWatermark",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "copy-EmployeeDim-Data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "select '@{formatDateTime(activity('getMaxTableDate').output.firstRow.lst_updt_ts,'yyyy-MM-dd HH:mm:ss.fff')}' as lst_updt_ts;",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "SQL_DS_bipindb",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "HighWatermark",
+								"type": "DatasetReference",
+								"parameters": {
+									"path": "SwapRecords/EmployeeDim"
+								}
+							}
+						]
+					},
+					{
+						"name": "Post-Load-Validation",
+						"type": "DatabricksNotebook",
+						"dependsOn": [
+							{
+								"activity": "update-HighWatermark",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/derek80091@outlook.com/Bipin/EmployeeSwapDataset/SQL to ADLS Post Load Validation",
+							"baseParameters": {
+								"FilePath": "SwapRecords/EmployeeDim/",
+								"FilterOnField": "lst_updt_ts",
+								"end_date": {
+									"value": "@activity('getMaxTableDate').output.firstRow.lst_updt_ts",
+									"type": "Expression"
+								},
+								"start_date": {
+									"value": "@activity('getMaxFileDate').output.firstRow.lst_updt_ts",
+									"type": "Expression"
+								},
+								"tbl_nm": "Employee_Dim"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "Bipin_ADB_LS",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "sendFailureMail",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "getFailureJson",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "sendMail",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"status": "DEV Pipeline Failed",
+								"src_count": {
+									"value": "@json(variables('errorvar')).file_count",
+									"type": "Expression"
+								},
+								"trgt_count": {
+									"value": "@json(variables('errorvar')).tbl_count",
+									"type": "Expression"
+								},
+								"Message": {
+									"value": "@json(variables('errorvar')).message",
+									"type": "Expression"
+								},
+								"pipeline_id": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "getFailureJson",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Post-Load-Validation",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "errorvar",
+							"value": {
+								"value": "@replace(activity('Post-Load-Validation').output.runError , 'PostValidationFalied: ' , '')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "sendSuccessMail",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "getSuccessJson",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "sendMail",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"status": "DEV Pipeline Succeeded",
+								"src_count": {
+									"value": "@json(variables('successvar')).file_count",
+									"type": "Expression"
+								},
+								"trgt_count": {
+									"value": "@json(variables('successvar')).tbl_count",
+									"type": "Expression"
+								},
+								"Message": {
+									"value": "@json(variables('successvar')).message",
+									"type": "Expression"
+								},
+								"pipeline_id": {
+									"value": "@pipeline().TriggerName",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "getSuccessJson",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Post-Load-Validation",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "successvar",
+							"value": {
+								"value": "@string(activity('Post-Load-Validation').output.runOutput)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"variables": {
+					"errorvar": {
+						"type": "String"
+					},
+					"successvar": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Bipin"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-03-04T16:27:31Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/HighWatermark')]",
+				"[concat(variables('factoryId'), '/datasets/SQL_DS_bipindb')]",
+				"[concat(variables('factoryId'), '/datasets/out_adls_parquet')]",
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADB_LS')]",
+				"[concat(variables('factoryId'), '/pipelines/sendMail')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ingest-EmployeeSwap-ToBronze')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ingest-EmployeeDim",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/derek80091@outlook.com/Bipin/Bronze-Setup & Implementation/ingest-EmployeeSwap"
+						},
+						"linkedServiceName": {
+							"referenceName": "Bipin_ADLS_v2_LS",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "copy-EmployeeSwapDataToProcessed",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "ingest-EmployeeDim",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": "SwapRecords/BigData",
+									"wildcardFileName": "**.parquet",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings",
+									"maxConcurrentConnections": 5,
+									"copyBehavior": "PreserveHierarchy"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"logSettings": {
+								"enableCopyActivityLog": true,
+								"copyActivityLogSettings": {
+									"logLevel": "Info",
+									"enableReliableLogging": false
+								},
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "Bipin_ADLS_LS",
+										"type": "LinkedServiceReference"
+									},
+									"path": "bipin/logs"
+								}
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "input_adls_parquet",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "out_adls_parquet_moved",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "deleteExistingFiles",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "copy-EmployeeSwapDataToProcessed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "delete_file_parquet",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"logStorageSettings": {
+								"linkedServiceName": {
+									"referenceName": "Bipin_ADLS_LS",
+									"type": "LinkedServiceReference"
+								},
+								"path": "bipin/logs"
+							},
+							"enableLogging": true,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Bipin"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-03-04T17:23:23Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_v2_LS')]",
+				"[concat(variables('factoryId'), '/datasets/input_adls_parquet')]",
+				"[concat(variables('factoryId'), '/datasets/out_adls_parquet_moved')]",
+				"[concat(variables('factoryId'), '/datasets/delete_file_parquet')]",
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ingest-EmployeeSwap-ToLanding')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ingestEmployeeSwapRecord",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/Users/derek80091@outlook.com/Bipin/Landing Setup/Employee Swap Dataset Adhoc"
+						},
+						"linkedServiceName": {
+							"referenceName": "Bipin_ADLS_v2_LS",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Bipin"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-03-04T16:27:31Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_v2_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sendMail')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "sendMail",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-24.northcentralus.logic.azure.com:443/workflows/0b15cff7ff804a6887ab7a9c79fa23a1/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=hn0fU7Ohw21_5ENx1zOQi9a7IiYMBQPBgZflaq4QJNg",
+							"body": {
+								"value": "{\"Message\":\"@{pipeline().parameters.Message}\",\r\n\"status\":\"@{pipeline().parameters.status}\",\r\n\"pipeline_id\":\"@{pipeline().parameters.pipeline_id}\",\r\n\"src_count\":\"@{pipeline().parameters.src_count}\",\r\n\"trgt_count\":\"@{pipeline().parameters.trgt_count}\"}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"status": {
+						"type": "string"
+					},
+					"src_count": {
+						"type": "string"
+					},
+					"trgt_count": {
+						"type": "string"
+					},
+					"Message": {
+						"type": "string"
+					},
+					"pipeline_id": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Bipin"
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-03-02T17:21:34Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/HighWatermark')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Bipin_ADLS_LS",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"path": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "HighWatermark.txt",
+						"folderPath": {
+							"value": "@dataset().path",
+							"type": "Expression"
+						},
+						"fileSystem": "bipin"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SQL_DS_bipindb')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "bipindb_LS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "emp_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "name",
+						"type": "varchar"
+					},
+					{
+						"name": "email",
+						"type": "varchar"
+					},
+					{
+						"name": "phone",
+						"type": "varchar"
+					},
+					{
+						"name": "address",
+						"type": "varchar"
+					},
+					{
+						"name": "join_date",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "Employee_Dim"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/bipindb_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/delete_file_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Bipin_ADLS_LS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "SwapRecords/BigData/",
+						"fileSystem": "bipin"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/input_adls_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Bipin_ADLS_LS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "bipin"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/out_adls_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Bipin_ADLS_LS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "SwapRecords/EmployeeDim",
+						"fileSystem": "bipin"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/out_adls_parquet_moved')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Bipin_ADLS_LS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "processed/EmployeeSwap",
+						"fileSystem": "bipin"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Bipin_ADLS_LS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDatabricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "this is the linked service to create  to databricks account",
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-2672022798733500.0.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "AzureKeyVaultData",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "DatabricksToker"
+					},
+					"newClusterNodeType": "Standard_DS4_v2",
+					"newClusterNumOfWorker": "1",
+					"newClusterSparkEnvVars": {
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+					},
+					"newClusterVersion": "10.4.x-scala2.12",
+					"clusterOption": "Fixed",
+					"newClusterInitScripts": []
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureKeyVaultData')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureKeyVaultData')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVaultData_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureKeyVaultDataBricks')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('AzureKeyVaultDataBricks_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Bipin_ADB_LS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-2672022798733500.0.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('Bipin_ADB_LS_accessToken')]"
+					},
+					"existingClusterId": "[parameters('Bipin_ADB_LS_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Bipin_ADLS_LS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('Bipin_ADLS_LS_properties_typeProperties_url')]",
+					"credential": {
+						"referenceName": "Bipin_ManagedIdentity",
+						"type": "CredentialReference"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/credentials/Bipin_ManagedIdentity')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Bipin_ADLS_v2_LS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-439102370569165.5.azuredatabricks.net",
+					"accessToken": {
+						"type": "SecureString",
+						"value": "[parameters('Bipin_ADLS_v2_LS_accessToken')]"
+					},
+					"existingClusterId": "[parameters('Bipin_ADLS_v2_LS_properties_typeProperties_existingClusterId')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MySqlServer')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"server": "[parameters('MySqlServer_properties_typeProperties_server')]",
+					"database": "[parameters('MySqlServer_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": true,
+					"authenticationType": "Windows",
+					"userName": "[parameters('MySqlServer_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('MySqlServer_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "IR-selfhosted",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/IR-selfhosted')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/RMySql')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "MySql",
+				"typeProperties": {
+					"server": "[parameters('RMySql_properties_typeProperties_server')]",
+					"port": 3306,
+					"database": "[parameters('RMySql_properties_typeProperties_database')]",
+					"username": "[parameters('RMySql_properties_typeProperties_username')]",
+					"sslMode": 1,
+					"useSystemTrustStore": 0,
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('RMySql_password')]"
+					},
+					"driverVersion": "v2"
+				},
+				"connectVia": {
+					"referenceName": "IR-selfhosted",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/IR-selfhosted')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/bipindb_LS')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('bipindb_LS_properties_typeProperties_server')]",
+					"database": "[parameters('bipindb_LS_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "UserAssignedManagedIdentity",
+					"credential": {
+						"referenceName": "Bipin_ManagedIdentity",
+						"type": "CredentialReference"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/credentials/Bipin_ManagedIdentity')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/IR-selfhosted')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Bipin_ManagedIdentity')]",
+			"type": "Microsoft.DataFactory/factories/credentials",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {
+					"resourceId": "/subscriptions/8d767cee-17af-426e-9452-e1e43419589b/resourcegroups/ResourceGroupRBS/providers/Microsoft.ManagedIdentity/userAssignedIdentities/Bipin_ManagedIdentity"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 1
+						}
+					},
+					{
+						"name": "Wait2",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 1
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Bipin"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		}
+	]
+}
