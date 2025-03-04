@@ -1,0 +1,21 @@
+{
+	"name": "out_adls_parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Bipin_ADLS_LS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "SwapRecords/EmployeeDim",
+				"fileSystem": "bipin"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

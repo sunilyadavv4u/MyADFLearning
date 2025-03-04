@@ -1,0 +1,153 @@
+{
+	"name": "ingest-EmployeeSwap-ToBronze",
+	"properties": {
+		"activities": [
+			{
+				"name": "ingest-EmployeeDim",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/derek80091@outlook.com/Bipin/Bronze-Setup & Implementation/ingest-EmployeeSwap"
+				},
+				"linkedServiceName": {
+					"referenceName": "Bipin_ADLS_v2_LS",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "copy-EmployeeSwapDataToProcessed",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ingest-EmployeeDim",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "SwapRecords/BigData",
+							"wildcardFileName": "**.parquet",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "ParquetReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings",
+							"maxConcurrentConnections": 5,
+							"copyBehavior": "PreserveHierarchy"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"logSettings": {
+						"enableCopyActivityLog": true,
+						"copyActivityLogSettings": {
+							"logLevel": "Info",
+							"enableReliableLogging": false
+						},
+						"logLocationSettings": {
+							"linkedServiceName": {
+								"referenceName": "Bipin_ADLS_LS",
+								"type": "LinkedServiceReference"
+							},
+							"path": "bipin/logs"
+						}
+					},
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "input_adls_parquet",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "out_adls_parquet_moved",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "deleteExistingFiles",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "copy-EmployeeSwapDataToProcessed",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "delete_file_parquet",
+						"type": "DatasetReference"
+					},
+					"logStorageSettings": {
+						"linkedServiceName": {
+							"referenceName": "Bipin_ADLS_LS",
+							"type": "LinkedServiceReference"
+						},
+						"path": "bipin/logs"
+					},
+					"enableLogging": true,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "Bipin"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-03-04T17:23:23Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

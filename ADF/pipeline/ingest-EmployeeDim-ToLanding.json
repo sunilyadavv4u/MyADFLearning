@@ -1,0 +1,390 @@
+{
+	"name": "ingest-EmployeeDim-ToLanding",
+	"properties": {
+		"activities": [
+			{
+				"name": "getMaxFileDate",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "HighWatermark",
+						"type": "DatasetReference",
+						"parameters": {
+							"path": "SwapRecords/EmployeeDim"
+						}
+					}
+				}
+			},
+			{
+				"name": "getMaxTableDate",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "getMaxFileDate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select format(max(lst_updt_ts),'yyyy-MM-dd HH:mm:ss.fff') as lst_updt_ts from dbo.employee_dim;",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"isolationLevel": "ReadCommitted",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SQL_DS_bipindb",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "copy-EmployeeDim-Data",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "getMaxTableDate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select * from dbo.employee_dim where lst_updt_ts>'@{formatDateTime(activity('getMaxFileDate').output.firstRow.lst_updt_ts,'yyyy-MM-dd HH:mm:ss.fff')}' and lst_updt_ts<='@{formatDateTime(activity('getMaxTableDate').output.firstRow.lst_updt_ts,'yyyy-MM-dd HH:mm:ss.fff')}';",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings",
+							"copyBehavior": "PreserveHierarchy"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "SQL_DS_bipindb",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "out_adls_parquet",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "update-HighWatermark",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "copy-EmployeeDim-Data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select '@{formatDateTime(activity('getMaxTableDate').output.firstRow.lst_updt_ts,'yyyy-MM-dd HH:mm:ss.fff')}' as lst_updt_ts;",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "SQL_DS_bipindb",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "HighWatermark",
+						"type": "DatasetReference",
+						"parameters": {
+							"path": "SwapRecords/EmployeeDim"
+						}
+					}
+				]
+			},
+			{
+				"name": "Post-Load-Validation",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "update-HighWatermark",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/derek80091@outlook.com/Bipin/EmployeeSwapDataset/SQL to ADLS Post Load Validation",
+					"baseParameters": {
+						"FilePath": "SwapRecords/EmployeeDim/",
+						"FilterOnField": "lst_updt_ts",
+						"end_date": {
+							"value": "@activity('getMaxTableDate').output.firstRow.lst_updt_ts",
+							"type": "Expression"
+						},
+						"start_date": {
+							"value": "@activity('getMaxFileDate').output.firstRow.lst_updt_ts",
+							"type": "Expression"
+						},
+						"tbl_nm": "Employee_Dim"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "Bipin_ADB_LS",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "sendFailureMail",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "getFailureJson",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "sendMail",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"status": "DEV Pipeline Failed",
+						"src_count": {
+							"value": "@json(variables('errorvar')).file_count",
+							"type": "Expression"
+						},
+						"trgt_count": {
+							"value": "@json(variables('errorvar')).tbl_count",
+							"type": "Expression"
+						},
+						"Message": {
+							"value": "@json(variables('errorvar')).message",
+							"type": "Expression"
+						},
+						"pipeline_id": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "getFailureJson",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Post-Load-Validation",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "errorvar",
+					"value": {
+						"value": "@replace(activity('Post-Load-Validation').output.runError , 'PostValidationFalied: ' , '')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "sendSuccessMail",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "getSuccessJson",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "sendMail",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"status": "DEV Pipeline Succeeded",
+						"src_count": {
+							"value": "@json(variables('successvar')).file_count",
+							"type": "Expression"
+						},
+						"trgt_count": {
+							"value": "@json(variables('successvar')).tbl_count",
+							"type": "Expression"
+						},
+						"Message": {
+							"value": "@json(variables('successvar')).message",
+							"type": "Expression"
+						},
+						"pipeline_id": {
+							"value": "@pipeline().TriggerName",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "getSuccessJson",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Post-Load-Validation",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "successvar",
+					"value": {
+						"value": "@string(activity('Post-Load-Validation').output.runOutput)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"errorvar": {
+				"type": "String"
+			},
+			"successvar": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Bipin"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-03-04T16:27:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

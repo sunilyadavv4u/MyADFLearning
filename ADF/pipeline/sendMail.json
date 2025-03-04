@@ -1,0 +1,51 @@
+{
+	"name": "sendMail",
+	"properties": {
+		"activities": [
+			{
+				"name": "sendMail",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": "https://prod-24.northcentralus.logic.azure.com:443/workflows/0b15cff7ff804a6887ab7a9c79fa23a1/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=hn0fU7Ohw21_5ENx1zOQi9a7IiYMBQPBgZflaq4QJNg",
+					"body": {
+						"value": "{\"Message\":\"@{pipeline().parameters.Message}\",\r\n\"status\":\"@{pipeline().parameters.status}\",\r\n\"pipeline_id\":\"@{pipeline().parameters.pipeline_id}\",\r\n\"src_count\":\"@{pipeline().parameters.src_count}\",\r\n\"trgt_count\":\"@{pipeline().parameters.trgt_count}\"}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"status": {
+				"type": "string"
+			},
+			"src_count": {
+				"type": "string"
+			},
+			"trgt_count": {
+				"type": "string"
+			},
+			"Message": {
+				"type": "string"
+			},
+			"pipeline_id": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Bipin"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-03-02T17:21:34Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
