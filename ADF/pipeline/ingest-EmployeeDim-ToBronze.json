@@ -1,0 +1,33 @@
+{
+	"name": "ingest-EmployeeDim-ToBronze",
+	"properties": {
+		"activities": [
+			{
+				"name": "ingest-EmployeeDim",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/derek80091@outlook.com/Bipin/Bronze-Setup & Implementation/ingest-Employee_dim"
+				},
+				"linkedServiceName": {
+					"referenceName": "Bipin_ADLS_v2_LS",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "Bipin"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-03-04T17:29:10Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

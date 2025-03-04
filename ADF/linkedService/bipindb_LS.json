@@ -1,0 +1,19 @@
+{
+	"name": "bipindb_LS",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "rbs-server.database.windows.net",
+			"database": "bipindb",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "UserAssignedManagedIdentity",
+			"credential": {
+				"referenceName": "Bipin_ManagedIdentity",
+				"type": "CredentialReference"
+			}
+		}
+	}
+}

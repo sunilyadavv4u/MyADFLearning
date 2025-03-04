@@ -1,0 +1,41 @@
+{
+	"name": "SetVariable",
+	"properties": {
+		"activities": [
+			{
+				"name": "Set value for file type",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "FileType",
+					"value": {
+						"value": "@replace(pipeline().parameters.FileName,'Sales','')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"FileName": {
+				"type": "string",
+				"defaultValue": "dailySales"
+			}
+		},
+		"variables": {
+			"FileType": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Rohit"
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-03-03T10:48:39Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
